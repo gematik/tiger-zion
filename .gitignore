@@ -1,0 +1,10 @@
+/.idea/
+/.vscode/
+**/*.iml
+*.iml
+/target/
+/*/target/
+DockerHub-Release.Jenkinsfile
+Dockerfile
+jenkinsfiles
+
