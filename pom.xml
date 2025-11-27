@@ -27,7 +27,7 @@
 
     <groupId>de.gematik.test</groupId>
     <artifactId>tiger-zion</artifactId>
-    <version>4.1.8</version>
+    <version>4.1.10</version>
     <packaging>jar</packaging>
     <name>${project.artifactId}</name>
     <description>Tiger Zion - zero line mock server</description>
