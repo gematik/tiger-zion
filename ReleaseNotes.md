@@ -2,6 +2,11 @@
 
 # Release Notes tiger-zion
 
+# Release 4.1.11
+### changed
+* TGR-1939: add automatic release pipeline triggered from tiger pipeline
+
+
 ## Release 4.1.0
 
 ### changed
