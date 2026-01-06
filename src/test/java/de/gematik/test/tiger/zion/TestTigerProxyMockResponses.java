@@ -505,7 +505,7 @@ class TestTigerProxyMockResponses {
         .asJson();
 
     testEnvMgr.getLocalTigerProxyOrFail().getRbelMessagesList().stream()
-        .map(RbelElement::printHttpDescription)
+        .map(RbelElement::printShortDescription)
         .forEach(System.out::println);
 
     assertThat(testEnvMgr.getLocalTigerProxyOrFail().getRbelMessagesList().get(0))
