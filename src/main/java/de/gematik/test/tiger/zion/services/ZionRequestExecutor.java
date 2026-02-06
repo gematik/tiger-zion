@@ -349,7 +349,7 @@ public class ZionRequestExecutor {
         ResponseEntity.status(unirestResponse.getStatus()).body(unirestResponse.getBody());
 
     parseResponseWithRbelLogger(responseEntity);
-    final RbelElement responseRbelMessage = rbelLogger.getMessageHistory().getLast();
+    final RbelElement responseRbelMessage = rbelLogger.getRbelConverter().getMessageHistory().getLast();
     final TigerMockResponse mockResponse =
         TigerMockResponse.builder()
             .requestCriterions(

@@ -424,7 +424,17 @@ This also works for floating-point and boolean values.
 
 === RbelWriter content structures
 
-In this paragraph we'll take a look at the various structures that can be serialized with the RbelWriter, which sits at the core of the Zion-Server.
+In this paragraph we'll take a look at the various structures that can be serialized with the RbelWriter, which sits at the core of the Zion-Server. Therefore you need to activate the RbelWriter in your tiger.yaml.
+
+==== tiger.yaml
+
+[source,yaml]
+----
+lib:
+  httpClientConfig:
+    activateRbelWriter: true
+----
+
 The following examples are kept in JSON (apart from the Bearer token example).
 Please note that the same result can be achieved from XML (or any other format for that matter).
 
@@ -449,7 +459,18 @@ Please note that the same result can be achieved from XML (or any other format f
 
 The three parts denote the different part of a JWT: The header claims (header), body claims (body) and signature properties (signature).
 RbelWriter will automatically try to sign the given JWT.
-For this the key at `$.signature.verifiedUsing` is consulted and a matching key is searched in the tiger key-database.
+For this the key at `$.signature.verifiedUsing` is consulted and a matching key is searched in the tiger key-database. Therefore you need to add the keyfolders in your tiger.yaml.
+
+==== tiger.yaml
+
+[source,yaml]
+----
+tigerProxy:
+  keyFolders:
+    - .
+----
+
+
 This will be filled at start-time by digging through the root-directory of the application recursively and trying to open all found key-files with various default passwords.
 
 Please note that the header-claims have to match the given key, otherwise the signing operation can't be completed successfully.
