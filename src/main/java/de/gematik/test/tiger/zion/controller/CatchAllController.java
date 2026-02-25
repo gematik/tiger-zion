@@ -50,6 +50,7 @@ import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.apache.commons.lang3.ArrayUtils;
 import org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -74,7 +75,7 @@ public class CatchAllController implements WebMvcConfigurer {
 
   @SneakyThrows
   @PostConstruct
-  public void loadMockReponsesFromFile() {
+  public void loadMockResponsesFromFile() {
     if (configuration.getMockResponseFiles() == null
         || configuration.getMockResponseFiles().isEmpty()) {
       log.info("Skipping initialization for mock-responses from files, none specified");
@@ -161,4 +162,5 @@ public class CatchAllController implements WebMvcConfigurer {
       return header.getBytes();
     }
   }
+
 }
