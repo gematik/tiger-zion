@@ -98,6 +98,32 @@ class TestZionServer {
     assertThat(bytes.getBody()).isEqualTo(data);
   }
 
+  /**
+   * Incoming requests to Zion are modified by the spring framework.
+   * A form-urlencoded '%20' gets decoded to a '+' before it gets received by our controller.
+   * This makes that the lenght of the body differs from the reported content-length.
+   * <p>
+   * This test ensures checks that the response is correctly generated when the request includes a '%20'
+   *
+   * */
+  @Test
+  void requestWithUrlEncForm(){
+    configuration.setMockResponses(
+        Map.of(
+            "test",
+            TigerMockResponse.builder()
+                .requestCriterions(List.of("message.method == 'POST'", "message.url =$ '/test'"))
+                .response(TigerMockResponseDescription.builder().body("?{$.body.scope}").build())
+                .build()));
+
+    HttpResponse<String> response = Unirest.post("http://localhost:" + port + "/test")
+            .header("Content-Type", "application/x-www-form-urlencoded")
+            .body("scope=openid%20profile").asString();
+
+    assertThat(response.getStatus()).isEqualTo(200);
+    assertThat(response.getBody()).isEqualTo("openid+profile");
+  }
+
   @SneakyThrows
   @Test
   void zipEncodedContent_shouldWork() {

@@ -2,6 +2,10 @@
 
 # Release Notes tiger-zion
 
+# Release 4.1.18
+
+* TGRZ-8: fix issue where the rewrite of urlencoded form params by the spring framework would prevent RbelHttpRequestConverter from correctly parsing the request body.
+
 # Release 4.1.11
 ### changed
 * TGR-1939: add automatic release pipeline triggered from tiger pipeline
