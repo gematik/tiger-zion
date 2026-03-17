@@ -31,6 +31,7 @@ import kong.unirest.core.UnirestInstance;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import java.io.File;
 
 /**
  * To make sure that the tests find the already built tiger-zion-executable.jar we should run them
@@ -43,6 +44,36 @@ class TestZionAsExternalJarIT {
   @AfterEach
   public void resetConfig() {
     TigerGlobalConfiguration.reset();
+    copyLatestExecutableJar();
+  }
+
+  /**
+   * Sucht das neueste tiger-zion-*-executable.jar im target-Verzeichnis und kopiert es auf tiger-zion-executable.jar,
+   * falls nötig.
+   */
+  private static void copyLatestExecutableJar() {
+    File targetDir = new File("target");
+    File[] jars = targetDir.listFiles((dir, name) -> name.matches("tiger-zion-.*-executable\\.jar"));
+    if (jars == null || jars.length == 0) {
+       return;
+    }
+    File dest = new File(targetDir, "tiger-zion-executable.jar");
+    File latestJar = java.util.Arrays.stream(jars)
+        .filter(jar -> !jar.equals(dest))
+        .max(java.util.Comparator.comparingLong(File::lastModified))
+        .orElse(dest);
+    if (latestJar.equals(dest)) {
+      // Ziel ist bereits das aktuellste JAR, nichts tun
+      return;
+    }
+    try {
+      java.nio.file.Files.copy(latestJar.toPath(), dest.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+      if (!dest.exists() || !dest.canRead()) {
+        throw new RuntimeException("Kopiertes Executable-Jar ist nicht lesbar: " + dest.getName());
+      }
+    } catch (java.io.IOException e) {
+      throw new RuntimeException("Konnte Executable-Jar nicht kopieren: " + latestJar.getName(), e);
+    }
   }
 
   @TigerTest(
@@ -60,7 +91,7 @@ class TestZionAsExternalJarIT {
                                 - --spring.profiles.active=mainserver
                               workingDir: src/test/resources
                             source:
-                              - local:../../../target/tiger-zion-*-executable.jar
+                              - local:target/tiger-zion-executable.jar
                             startupTimeoutSec: 40
                           backendServer:
                             type: externalJar
@@ -72,9 +103,10 @@ class TestZionAsExternalJarIT {
                                 - --spring.profiles.active=backendserver
                               workingDir: src/test/resources
                             source:
-                              - local:../../../target/tiger-zion-*-executable.jar
+                              - local:target/tiger-zion-executable.jar
                             startupTimeoutSec: 40
-                        """)
+                        """
+  )
   @Test
   void testMultipleZionServerWithProfiles(UnirestInstance unirestInstance) {
     final HttpResponse<JsonNode> response =
@@ -103,8 +135,9 @@ class TestZionAsExternalJarIT {
                       - --spring.profiles.active=echoserver
                     workingDir: src/test/resources
                   source:
-                    - local:../../../target/tiger-zion-*-executable.jar
-              """)
+                    - local:target/tiger-zion-executable.jar
+              """
+  )
   @Test
   void testExternalZionServer(UnirestInstance unirest) {
     final HttpResponse<JsonNode> response =
