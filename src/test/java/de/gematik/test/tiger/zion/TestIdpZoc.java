@@ -31,11 +31,8 @@ import de.gematik.test.tiger.config.ResetTigerConfiguration;
 import de.gematik.test.tiger.zion.config.TigerMockResponse;
 import de.gematik.test.tiger.zion.config.TigerMockResponseDescription;
 import de.gematik.test.tiger.zion.config.ZionConfiguration;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
-import lombok.SneakyThrows;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -53,18 +50,13 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
     properties = {"zion.mockResponseFiles.firstFile=src/test/resources/someMockResponse.yaml"})
 class TestIdpZoc {
 
-  final Path tempDirectory = Path.of("target", "zionResponses");
-
   @Autowired private ZionConfiguration configuration;
   @LocalServerPort private int port;
   private Map<String, TigerMockResponse> mockResponsesBackup;
 
-  @SneakyThrows
   @BeforeEach
-  void setupTempDirectory() {
+  void setup() {
     TigerGlobalConfiguration.reset();
-    Files.createDirectories(tempDirectory);
-    Files.list(tempDirectory).forEach(path -> path.toFile().delete());
     mockResponsesBackup = configuration.getMockResponses();
   }
 

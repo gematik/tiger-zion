@@ -47,9 +47,9 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import kong.unirest.core.*;
-import lombok.SneakyThrows;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.io.TempDir;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.ConfigurationPropertiesBindException;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -66,19 +66,16 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 @Disabled
 class TestTigerProxyMockResponses {
 
-  final Path tempDirectory = Path.of("target", "zionResponses");
+  @TempDir Path tempDirectory;
 
   @Autowired private ZionConfiguration configuration;
   @Autowired private ObjectMapper objectMapper;
   @LocalServerPort private int port;
   private Map<String, TigerMockResponse> mockResponsesBackup;
 
-  @SneakyThrows
   @BeforeEach
-  void setupTempDirectory() {
+  void setup() {
     TigerGlobalConfiguration.reset();
-    Files.createDirectories(tempDirectory);
-    Files.list(tempDirectory).forEach(path -> path.toFile().delete());
     mockResponsesBackup = configuration.getMockResponses();
   }
 
@@ -142,10 +139,11 @@ class TestTigerProxyMockResponses {
 
     Unirest.get("http://localhost:" + port + "/shallowPath?foo=bar").asJson();
 
-    final TigerMockResponse mockResponse =
-        objectMapper.readValue(
-            Files.list(Path.of("target", "zionResponses")).findAny().orElseThrow().toFile(),
-            TigerMockResponse.class);
+    final TigerMockResponse mockResponse;
+    try (var files = Files.list(Path.of("target", "zionResponses"))) {
+      mockResponse =
+          objectMapper.readValue(files.findAny().orElseThrow().toFile(), TigerMockResponse.class);
+    }
 
     assertThat(mockResponse.getRequestCriterions())
         .contains("message.method == 'GET'")
@@ -310,9 +308,12 @@ class TestTigerProxyMockResponses {
 
     Unirest.get("http://localhost:" + port + "/shallowPath?foo=bar").asJson();
 
-    final TigerMockResponse mockResponse =
-        objectMapper.readValue(
-            Files.list(tempDirectory).findAny().get().toFile(), TigerMockResponse.class);
+    final TigerMockResponse mockResponse;
+    try (var files = Files.list(tempDirectory)) {
+      mockResponse =
+          objectMapper.readValue(
+              files.findAny().orElseThrow().toFile(), TigerMockResponse.class);
+    }
 
     assertThat(mockResponse.getResponse().getBody())
         .containsIgnoringWhitespaces(

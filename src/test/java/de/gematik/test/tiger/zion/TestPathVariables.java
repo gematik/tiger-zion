@@ -26,15 +26,12 @@ import de.gematik.test.tiger.zion.config.TigerMockResponse;
 import de.gematik.test.tiger.zion.config.TigerMockResponseDescription;
 import de.gematik.test.tiger.zion.config.ZionConfiguration;
 import de.gematik.test.tiger.zion.config.ZionRequestMatchDefinition;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 import kong.unirest.core.HttpResponse;
 import kong.unirest.core.HttpStatus;
 import kong.unirest.core.Unirest;
-import lombok.SneakyThrows;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -50,8 +47,6 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class TestPathVariables {
-
-  final Path tempDirectory = Path.of("target", "zionResponses");
 
   @Autowired private ZionConfiguration configuration;
   @LocalServerPort private int port;
@@ -81,11 +76,8 @@ class TestPathVariables {
             "valueToAssign"));
   }
 
-  @SneakyThrows
   @BeforeEach
-  void setupTempDirectory() {
-    Files.createDirectories(tempDirectory);
-    Files.list(tempDirectory).forEach(path -> path.toFile().delete());
+  void setup() {
     mockResponsesBackup = configuration.getMockResponses();
   }
 
