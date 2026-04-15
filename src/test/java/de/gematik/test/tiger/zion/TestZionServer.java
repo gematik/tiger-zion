@@ -32,8 +32,6 @@ import de.gematik.test.tiger.zion.config.TigerMockResponse;
 import de.gematik.test.tiger.zion.config.TigerMockResponseDescription;
 import de.gematik.test.tiger.zion.config.ZionConfiguration;
 import java.io.File;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -43,7 +41,6 @@ import lombok.SneakyThrows;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -55,17 +52,8 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class TestZionServer {
 
-  final Path tempDirectory = Path.of("target", "zionResponses");
-
   @Autowired private ZionConfiguration configuration;
   @LocalServerPort private int port;
-
-  @SneakyThrows
-  @BeforeEach
-  void setupTempDirectory() {
-    Files.createDirectories(tempDirectory);
-    Files.list(tempDirectory).forEach(path -> path.toFile().delete());
-  }
 
   @AfterEach
   void resetMockResponses() {
@@ -104,7 +92,6 @@ class TestZionServer {
    * This makes that the lenght of the body differs from the reported content-length.
    * <p>
    * This test ensures checks that the response is correctly generated when the request includes a '%20'
-   *
    * */
   @Test
   void requestWithUrlEncForm(){
