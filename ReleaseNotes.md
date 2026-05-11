@@ -2,6 +2,9 @@
 
 # Release Notes tiger-zion
 
+# Release 4.2.7
+* TGRZ-14: fix dockerhub-release jenkinsfile
+
 # Release 4.1.18
 
 * TGRZ-8: fix issue where the rewrite of urlencoded form params by the spring framework would prevent RbelHttpRequestConverter from correctly parsing the request body.
