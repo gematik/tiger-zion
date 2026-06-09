@@ -2,6 +2,9 @@
 
 # Release Notes tiger-zion
 
+# Release 4.3.0
+* TGRZ-15: change base image for Dockerfile
+
 # Release 4.2.7
 * TGRZ-14: fix dockerhub-release jenkinsfile
 
