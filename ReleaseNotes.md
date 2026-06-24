@@ -2,6 +2,9 @@
 
 # Release Notes tiger-zion
 
+# Release 4.3.2
+* TGRZ-16: create real releases on github, not just tags 
+
 # Release 4.3.0
 * TGRZ-15: change base image for Dockerfile
 
