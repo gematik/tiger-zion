@@ -22,7 +22,7 @@ package de.gematik.test.tiger.zion.services;
 
 import static de.gematik.test.tiger.zion.config.ZionRequestMatchDefinition.PathMatchingResult.EMPTY_MATCH;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import de.gematik.rbellogger.RbelLogger;
 import de.gematik.rbellogger.data.RbelElement;
 import de.gematik.rbellogger.util.RbelSocketAddress;
@@ -263,14 +263,14 @@ public class ZionRequestExecutor {
     List<String> combinedRequestCriterions = new ArrayList<>(mockResponse.getRequestCriterions());
 
     mockResponse
-        .getRequestOptional()
+        .optionalRequest()
         .map(ZionRequestMatchDefinition::extractAdditionalCriteria)
         .ifPresent(combinedRequestCriterions::addAll);
 
     RbelElement currentRequestRbelMessage = (RbelElement) context.getCurrentElement();
     ZionRequestMatchDefinition.PathMatchingResult pathMatchingResult =
         mockResponse
-            .getRequestOptional()
+            .optionalRequest()
             .map(r -> r.matchPathVariables(currentRequestRbelMessage, context))
             .orElse(EMPTY_MATCH);
 
@@ -337,10 +337,7 @@ public class ZionRequestExecutor {
     final HttpRequestWithBody unirestRequest =
         Unirest.request(name, targetUri.toString())
             .headers(
-                request.getHeaders().entrySet().stream()
-                    .collect(
-                        Collectors.toMap(
-                            Entry::getKey, header -> String.join(",", header.getValue()))));
+                request.getHeaders().toSingleValueMap());
     if (request.hasBody()) {
       unirestRequest.body(request.getBody());
     }
@@ -400,11 +397,10 @@ public class ZionRequestExecutor {
   private byte[] buildRawMessageApproximate(ResponseEntity<byte[]> response) {
     String header = "HTTP/1.1 " + response.getStatusCode().value();
     if (!response.getHeaders().isEmpty()) {
-      header +=
-          "\r\n"
-              + response.getHeaders().entrySet().stream()
-                  .flatMap(entry -> entry.getValue().stream().map(v -> entry.getKey() + ": " + v))
-                  .collect(Collectors.joining("\r\n"));
+      List<String> headerLines = new ArrayList<>();
+      response.getHeaders().forEach((name, values) ->
+          values.forEach(v -> headerLines.add(name + ": " + v)));
+      header += "\r\n" + String.join("\r\n", headerLines);
     }
     val body = response.getBody();
     if (body != null) {

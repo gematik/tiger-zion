@@ -20,6 +20,7 @@
  */
 package de.gematik.test.tiger.zion;
 
+import tools.jackson.databind.ObjectMapper;
 import de.gematik.rbellogger.RbelLogger;
 import de.gematik.rbellogger.configuration.RbelConfiguration;
 import de.gematik.rbellogger.initializers.RbelKeyFolderInitializer;
@@ -30,6 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 
 @SpringBootApplication
@@ -57,5 +59,11 @@ public class ZionApplication {
   @Bean
   public RbelWriter rbelWriter(@Autowired RbelLogger rbelLogger) {
     return new RbelWriter(rbelLogger.getRbelConverter());
+  }
+
+  @Bean
+  @ConditionalOnMissingBean
+  public ObjectMapper objectMapper() {
+    return new ObjectMapper();
   }
 }

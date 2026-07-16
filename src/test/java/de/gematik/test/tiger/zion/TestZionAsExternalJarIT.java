@@ -136,6 +136,7 @@ class TestZionAsExternalJarIT {
                     workingDir: src/test/resources
                   source:
                     - local:target/tiger-zion-executable.jar
+                  startupTimeoutSec: 40
               """
   )
   @Test

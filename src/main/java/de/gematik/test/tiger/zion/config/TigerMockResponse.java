@@ -56,7 +56,7 @@ public class TigerMockResponse {
   private String name;
 
   @JsonIgnore
-  public Optional<ZionRequestMatchDefinition> getRequestOptional() {
+  public Optional<ZionRequestMatchDefinition> optionalRequest() {
     return Optional.ofNullable(request);
   }
 
