@@ -22,7 +22,7 @@ package de.gematik.test.tiger.zion.controller;
 
 import static org.springframework.web.bind.annotation.RequestMethod.*;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import de.gematik.rbellogger.RbelLogger;
 import de.gematik.rbellogger.data.RbelElement;
 import de.gematik.rbellogger.util.RbelInternetAddress;
@@ -42,14 +42,15 @@ import java.net.UnknownHostException;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map.Entry;
-import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.apache.commons.lang3.ArrayUtils;
-import org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext;
+import org.springframework.boot.web.server.servlet.context.ServletWebServerApplicationContext;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
@@ -146,15 +147,16 @@ public class CatchAllController implements WebMvcConfigurer {
   }
 
   private byte[] buildRawMessageApproximate(RequestEntity<byte[]> request) {
+    List<String> headerLines = new ArrayList<>();
+    request.getHeaders().forEach((name, values) ->
+        values.forEach(v -> headerLines.add(name + ": " + v)));
     final String header =
         request.getMethod()
             + " "
             + request.getUrl()
             + " HTTP/1.1\r\n"
             + // NOSONAR
-            request.getHeaders().entrySet().stream()
-                .flatMap(entry -> entry.getValue().stream().map(v -> entry.getKey() + ": " + v))
-                .collect(Collectors.joining("\r\n"))
+            String.join("\r\n", headerLines)
             + "\r\n\r\n";
     if (request.hasBody()) {
       return ArrayUtils.addAll(header.getBytes(), request.getBody());
