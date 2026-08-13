@@ -1,6 +1,9 @@
 <img align="right" width="250" height="47" src="Gematik_Logo_Flag_With_Background.png" /> <br />     
 
 # Release Notes tiger-zion
+# Release 4.4.1
+* TGRZ-18: update dependencies to latest versions
+
 # Release 4.4.0
 * TGRZ-17: update dependencies to latest versions
 
