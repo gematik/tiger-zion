@@ -1,6 +1,9 @@
 <img align="right" width="250" height="47" src="Gematik_Logo_Flag_With_Background.png" /> <br />     
 
 # Release Notes tiger-zion
+# Release 4.4.3
+* TGRZ-21: use renovate instead of dependabot for dependency updates
+
 # Release 4.4.1
 * TGRZ-18: update dependencies to latest versions
 

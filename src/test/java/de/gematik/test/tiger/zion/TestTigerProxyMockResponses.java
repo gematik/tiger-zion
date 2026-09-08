@@ -345,7 +345,7 @@ class TestTigerProxyMockResponses {
                        - --spring.profiles.active=mainserver
                      workingDir: src/test/resources
                    source:
-                     - local:../../../target/tiger-zion-*-executable.jar
+                     - local:../../../target/tiger-zion-*-docker.jar
                  backendServer:
                    type: externalJar
                    healthcheckUrl:
@@ -356,7 +356,7 @@ class TestTigerProxyMockResponses {
                        - --spring.profiles.active=backendserver
                      workingDir: src/test/resources
                    source:
-                     - local:../../../target/tiger-zion-*-executable.jar
+                     - local:../../../target/tiger-zion-*-docker.jar
                lib:
                  trafficVisualization: true
                """)
@@ -411,7 +411,7 @@ class TestTigerProxyMockResponses {
                       - --spring.profiles.active=echoserver
                     workingDir: src/test/resources
                   source:
-                    - local:../../../target/tiger-zion-*-executable.jar
+                    - local:../../../target/tiger-zion-*-docker.jar
               lib:
                 trafficVisualization: true
               """)

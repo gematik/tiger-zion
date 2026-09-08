@@ -7,4 +7,5 @@
 DockerHub-Release.Jenkinsfile
 Dockerfile
 jenkinsfiles
+renovate.json
 

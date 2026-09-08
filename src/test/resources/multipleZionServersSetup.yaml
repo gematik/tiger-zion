@@ -15,7 +15,7 @@ servers:
         - --spring.profiles.active=mainserver
       workingDir: C:\repos\tiger\tiger-zion\src\test\resources
     source:
-      - local:../../../../tiger-zion/target/tiger-zion-*-executable.jar
+      - local:../../../../tiger-zion/target/tiger-zion-*-docker.jar
 
   backendServer:
     type: externalJar
@@ -27,7 +27,7 @@ servers:
         - --spring.profiles.active=backendServer
       workingDir: C:\repos\tiger\tiger-zion\src\test\resources
     source:
-      - local:../../../../tiger-zion/target/tiger-zion-*-executable.jar
+      - local:../../../../tiger-zion/target/tiger-zion-*-docker.jar
 
   exampleCom:
     type: externalUrl
