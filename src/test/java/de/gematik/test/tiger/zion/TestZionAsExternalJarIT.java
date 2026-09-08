@@ -34,7 +34,7 @@ import org.junit.jupiter.api.Test;
 import java.io.File;
 
 /**
- * To make sure that the tests find the already built tiger-zion-executable.jar we should run them
+ * To make sure that the tests find the already built tiger-zion-docker.jar we should run them
  * in the integrationtest stage which comes after the package stage.
  */
 @ResetTigerConfiguration
@@ -48,16 +48,16 @@ class TestZionAsExternalJarIT {
   }
 
   /**
-   * Sucht das neueste tiger-zion-*-executable.jar im target-Verzeichnis und kopiert es auf tiger-zion-executable.jar,
+   * Sucht das neueste tiger-zion-*-docker.jar im target-Verzeichnis und kopiert es auf tiger-zion-docker.jar,
    * falls nötig.
    */
   private static void copyLatestExecutableJar() {
     File targetDir = new File("target");
-    File[] jars = targetDir.listFiles((dir, name) -> name.matches("tiger-zion-.*-executable\\.jar"));
+    File[] jars = targetDir.listFiles((dir, name) -> name.matches("tiger-zion-.*-docker\\.jar"));
     if (jars == null || jars.length == 0) {
        return;
     }
-    File dest = new File(targetDir, "tiger-zion-executable.jar");
+    File dest = new File(targetDir, "tiger-zion-docker.jar");
     File latestJar = java.util.Arrays.stream(jars)
         .filter(jar -> !jar.equals(dest))
         .max(java.util.Comparator.comparingLong(File::lastModified))
@@ -91,7 +91,7 @@ class TestZionAsExternalJarIT {
                                 - --spring.profiles.active=mainserver
                               workingDir: src/test/resources
                             source:
-                              - local:target/tiger-zion-executable.jar
+                              - local:target/tiger-zion-docker.jar
                             startupTimeoutSec: 40
                           backendServer:
                             type: externalJar
@@ -103,7 +103,7 @@ class TestZionAsExternalJarIT {
                                 - --spring.profiles.active=backendserver
                               workingDir: src/test/resources
                             source:
-                              - local:target/tiger-zion-executable.jar
+                              - local:target/tiger-zion-docker.jar
                             startupTimeoutSec: 40
                         """
   )
@@ -135,7 +135,7 @@ class TestZionAsExternalJarIT {
                       - --spring.profiles.active=echoserver
                     workingDir: src/test/resources
                   source:
-                    - local:target/tiger-zion-executable.jar
+                    - local:target/tiger-zion-docker.jar
                   startupTimeoutSec: 40
               """
   )

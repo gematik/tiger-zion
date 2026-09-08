@@ -27,7 +27,7 @@
 
     <groupId>de.gematik.test</groupId>
     <artifactId>tiger-zion</artifactId>
-    <version>4.4.2</version>
+    <version>4.4.3</version>
     <packaging>jar</packaging>
     <name>${project.artifactId}</name>
     <description>Tiger Zion - zero line mock server</description>
@@ -76,7 +76,7 @@
         <maven-source-plugin.version>3.4.0</maven-source-plugin.version>
         <maven.compiler.source>${version.java}</maven.compiler.source>
         <maven.compiler.target>${version.java}</maven.compiler.target>
-        <mycila.license-maven-plugin.version>5.1.1</mycila.license-maven-plugin.version>
+        <mycila.license-maven-plugin.version>5.1.2</mycila.license-maven-plugin.version>
         <project.build.outputEncoding>UTF-8</project.build.outputEncoding>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <skipSurefire>false</skipSurefire>
@@ -85,9 +85,9 @@
         <sonar.java.coveragePlugin>jacoco</sonar.java.coveragePlugin>
         <sonar.language>java</sonar.language>
         <version.java>17</version.java>
-        <version.spotless-maven-plugin>3.9.0</version.spotless-maven-plugin>
+        <version.spotless-maven-plugin>3.10.1</version.spotless-maven-plugin>
         <version.spotless.google-java-format>1.18.1</version.spotless.google-java-format>
-        <version.tiger>4.4.2</version.tiger>
+        <version.tiger>4.4.3</version.tiger>
     </properties>
 
     <dependencyManagement>
@@ -176,20 +176,11 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
-                <version>4.1.0</version>
+                <version>4.1.1</version>
                 <configuration>
                     <mainClass>de.gematik.test.tiger.zion.ZionApplication</mainClass>
                 </configuration>
                 <executions>
-                    <execution>
-                        <id>repackage</id>
-                        <goals>
-                            <goal>repackage</goal>
-                        </goals>
-                        <configuration>
-                            <classifier>executable</classifier>
-                        </configuration>
-                    </execution>
                     <execution>
                         <id>build-info</id>
                         <goals>
@@ -203,6 +194,9 @@
                         </goals>
                         <configuration>
                             <classifier>docker</classifier>
+                            <!-- with attach: false, the jar will not be attached to the project build and will not be installed or deployed in maven central
+                            https://docs.spring.io/spring-boot/maven-plugin/packaging.html#packaging.repackage-goal.parameter-details.attach -->
+                            <attach>false</attach>
                         </configuration>
                     </execution>
                 </executions>
