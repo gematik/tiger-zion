@@ -29,6 +29,7 @@ import de.gematik.test.tiger.common.config.TigerGlobalConfiguration;
 import de.gematik.test.tiger.common.jexl.TigerJexlContext;
 import de.gematik.test.tiger.zion.config.ZionBackendRequestDescription;
 import de.gematik.test.tiger.zion.config.ZionConfiguration;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
@@ -71,10 +72,10 @@ public class BackendRequestExecutor {
 
     for (ZionBackendRequestDescription requestDescription : backendRequests) {
       try {
-        var response = prepareAndExecuteBackendRequest(requestDescription, requestRbelMessage);
+        var rawResponse = prepareAndExecuteBackendRequest(requestDescription, requestRbelMessage);
 
         final RbelElement rbelResponse =
-            rbelLogger.getRbelConverter().convertElement(responseToRawMessage(response), null);
+            rbelLogger.getRbelConverter().convertElement(rawResponse, null);
         VariableAssigner.doAssignments(
             requestDescription.getAssignments(), rbelResponse, jexlContext);
       } catch (RuntimeException e) {
@@ -91,7 +92,7 @@ public class BackendRequestExecutor {
   }
 
   @SneakyThrows
-  private CloseableHttpResponse prepareAndExecuteBackendRequest(
+  private byte[] prepareAndExecuteBackendRequest(
       ZionBackendRequestDescription requestDescription, RbelElement requestRbelMessage) {
     final String method = getMethod(requestDescription);
     try (CloseableHttpClient apacheHttpClient = buildHttpClient()) {
@@ -106,53 +107,60 @@ public class BackendRequestExecutor {
       if (requestDescription.getHeaders() != null) {
         requestDescription.getHeaders().forEach(httpRequest::addHeader);
       }
-      CloseableHttpResponse response;
-      if (StringUtils.isNotEmpty(requestDescription.getBody())) {
-        final RbelSerializationResult body = getBody(requestDescription, requestRbelMessage);
-        if (log.isTraceEnabled()) {
-          log.trace(
-              "About to sent {} with body {} to {}",
-              httpRequest.getMethod(),
-              body.getContentAsString(),
-              httpRequest.getUri());
-        }
-        httpRequest.setEntity(new ByteArrayEntity(body.getContent()));
-        response = apacheHttpClient.execute(httpRequest.build());
-      } else {
-        if (log.isTraceEnabled()) {
-          log.trace(
-              "About to sent {} without body to {}", httpRequest.getMethod(), httpRequest.getUri());
-        }
-        response = apacheHttpClient.execute(httpRequest.build());
+      try (CloseableHttpResponse response =
+          StringUtils.isNotEmpty(requestDescription.getBody())
+              ? executeWithRequestBody(apacheHttpClient, httpRequest, requestDescription, requestRbelMessage)
+              : apacheHttpClient.execute(httpRequest.build())) {
+        return responseToRawMessage(response);
       }
-      return response;
     }
+  }
+
+  private CloseableHttpResponse executeWithRequestBody(
+      CloseableHttpClient apacheHttpClient,
+      RequestBuilder httpRequest,
+      ZionBackendRequestDescription requestDescription,
+      RbelElement requestRbelMessage)
+      throws IOException {
+    final RbelSerializationResult body = getBody(requestDescription, requestRbelMessage);
+    if (log.isTraceEnabled()) {
+      log.trace(
+          "About to sent {} with body {} to {}",
+          httpRequest.getMethod(),
+          body.getContentAsString(),
+          httpRequest.getUri());
+    }
+    httpRequest.setEntity(new ByteArrayEntity(body.getContent()));
+    return apacheHttpClient.execute(httpRequest.build());
   }
 
   @SneakyThrows
   private byte[] responseToRawMessage(CloseableHttpResponse response) {
-    byte[] httpResponseHeader =
+    // Apache HttpClient already decoded the body (chunked, gzip) and removed the matching
+    // headers, so the message is re-framed with an explicit Content-Length
+    final byte[] responseBody =
+        response.getEntity() == null
+            ? new byte[0]
+            : response.getEntity().getContent().readAllBytes();
+    final byte[] httpResponseHeader =
         (response.getStatusLine()
                 + "\r\n"
                 + formatHeaderList(response.getAllHeaders())
+                + "Content-Length: "
+                + responseBody.length
                 + "\r\n\r\n")
             .getBytes(StandardCharsets.US_ASCII);
-
-    return ArrayUtils.addAll(httpResponseHeader, response.getEntity().getContent().readAllBytes());
+    return ArrayUtils.addAll(httpResponseHeader, responseBody);
   }
 
   private String formatHeaderList(Header[] headerList) {
     return Arrays.stream(ArrayUtils.nullToEmpty(headerList))
         .map(Header.class::cast)
-        .filter(
-            h ->
-                !h.getName()
-                    .equalsIgnoreCase(
-                        "Transfer-Encoding")) // chunks are already merged by the unirest client
-        .map(h -> h.getName() + ": " + h.getValue())
-        .collect(Collectors.joining("\r\n"));
+        .filter(h -> !h.getName().equalsIgnoreCase("Transfer-Encoding"))
+        .filter(h -> !h.getName().equalsIgnoreCase("Content-Length"))
+        .map(h -> h.getName() + ": " + h.getValue() + "\r\n")
+        .collect(Collectors.joining());
   }
-
   private RbelSerializationResult getBody(
       ZionBackendRequestDescription requestDescription, RbelElement requestRbelMessage) {
     final String rawContent =

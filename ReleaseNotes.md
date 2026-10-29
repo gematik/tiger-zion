@@ -1,6 +1,14 @@
 <img align="right" width="250" height="47" src="Gematik_Logo_Flag_With_Background.png" /> <br />     
 
 # Release Notes tiger-zion
+
+# Release 5.0.0
+## Breaking Changes
+* TGR-2351: Migrate tiger to JDK 21
+
+# Release 4.4.6
+* TGRZ-7: Backend requests do not parse body correctly
+
 # Release 4.4.3
 * TGRZ-21: use renovate instead of dependabot for dependency updates
 

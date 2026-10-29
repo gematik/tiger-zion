@@ -20,23 +20,18 @@
  */
 package de.gematik.test.tiger.zion;
 
-import static de.gematik.rbellogger.data.RbelElementAssertion.assertThat;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.awaitility.Awaitility.await;
-
 import de.gematik.test.tiger.common.config.TigerGlobalConfiguration;
 import de.gematik.test.tiger.common.data.config.tigerproxy.TigerConfigurationRoute;
 import de.gematik.test.tiger.common.data.config.tigerproxy.TigerProxyConfiguration;
 import de.gematik.test.tiger.proxy.TigerProxy;
+import de.gematik.test.tiger.testenvmgr.junit.TigerTest;
 import de.gematik.test.tiger.zion.config.TigerMockResponse;
 import de.gematik.test.tiger.zion.config.TigerMockResponseDescription;
+import de.gematik.test.tiger.zion.config.ZionBackendRequestDescription;
 import de.gematik.test.tiger.zion.config.ZionConfiguration;
-import java.io.File;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import kong.unirest.core.HttpResponse;
 import kong.unirest.core.Unirest;
+import kong.unirest.core.UnirestInstance;
 import lombok.SneakyThrows;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.FileUtils;
@@ -47,6 +42,20 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
+
+import java.io.File;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import static de.gematik.rbellogger.data.RbelElementAssertion.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -156,4 +165,110 @@ class TestZionServer {
       assertThat(bytes.getBody()).isEqualTo(body);
     }
   }
+
+  @SneakyThrows
+  @Test
+  void backendRequest_withChunkedTransferEncoding_shouldPreserveBody() {
+    final String expectedBody = "chunked-response-body";
+    final String rawChunkedResponse =
+        "HTTP/1.1 200 OK\r\n"
+            + "Transfer-Encoding: chunked\r\n"
+            + "Connection: close\r\n"
+            + "\r\n"
+            + Integer.toHexString(expectedBody.getBytes(StandardCharsets.UTF_8).length)
+            + "\r\n"
+            + expectedBody
+            + "\r\n0\r\n\r\n";
+
+    try (ServerSocket backendSocket = new ServerSocket(0)) {
+      backendSocket.setSoTimeout(5000);
+      Thread backendThread =
+          new Thread(
+              () -> {
+                try (Socket socket = backendSocket.accept();
+                    InputStream inputStream = socket.getInputStream();
+                    OutputStream outputStream = socket.getOutputStream()) {
+                  byte[] buffer = new byte[2048];
+                  StringBuilder request = new StringBuilder();
+                  while (!request.toString().contains("\r\n\r\n")) {
+                    int read = inputStream.read(buffer);
+                    if (read < 0) {
+                      break;
+                    }
+                    request.append(new String(buffer, 0, read, StandardCharsets.ISO_8859_1));
+                  }
+                  outputStream.write(rawChunkedResponse.getBytes(StandardCharsets.ISO_8859_1));
+                  outputStream.flush();
+                } catch (Exception e) {
+                  throw new RuntimeException(e);
+                }
+              });
+      backendThread.setDaemon(true);
+      backendThread.start();
+
+      configuration.setMockResponses(
+          Map.of(
+              "chunked",
+              TigerMockResponse.builder()
+                  .requestCriterions(
+                      List.of("message.method == 'GET'", "message.path == '/chunked'"))
+                  .backendRequests(
+                      Map.of(
+                          "chunkedBackendRequest",
+                          ZionBackendRequestDescription.builder()
+                              .method("GET")
+                              .url("http://localhost:" + backendSocket.getLocalPort() + "/chunked")
+                              .assignments(Map.of("chunkedBody", "$.body"))
+                              .build()))
+                  .response(
+                      TigerMockResponseDescription.builder()
+                          .statusCode("200")
+                          .body("${chunkedBody}")
+                          .build())
+                  .build()));
+
+      final HttpResponse<String> response =
+          Unirest.get("http://localhost:" + port + "/chunked").asString();
+
+      assertThat(response.getStatus()).isEqualTo(200);
+      assertThat(response.getBody()).isEqualTo(expectedBody);
+    }
+  }
+
+  @TigerTest(
+      tigerYaml =
+          """
+        servers:
+          zionServer:
+            type: zion
+            zionConfiguration:
+              serverPort: "${free.port.10}"
+              mockResponses:
+                 helloExampleCom:
+                    requestCriterions:
+                      - message.method == 'GET'
+                      - message.path == '/helloExampleCom'
+                    backendRequests:
+                      sayHello:
+                        method: GET
+                        url: "http://www.example.com"
+                        assignments:
+                          exampleComResponseBody: "$.body"
+                        executeAfterSelection: true
+                    response:
+                      statusCode: 200
+                      body: ${exampleComResponseBody}
+        """)
+  @Test
+  void testZionServer_backendRequest(UnirestInstance unirestInstance) {
+    final HttpResponse<String> response200 =
+        unirestInstance
+            .get(
+                TigerGlobalConfiguration.resolvePlaceholders(
+                    "http://zionServer/helloExampleCom"))
+            .asString();
+    assertThat(response200.getStatus()).isEqualTo(200);
+    assertThat(response200.getBody()).contains("Example Domain");
+  }
+
 }
