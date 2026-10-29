@@ -27,7 +27,7 @@
 
     <groupId>de.gematik.test</groupId>
     <artifactId>tiger-zion</artifactId>
-    <version>4.4.5</version>
+    <version>4.5.0</version>
     <packaging>jar</packaging>
     <name>${project.artifactId}</name>
     <description>Tiger Zion - zero line mock server</description>
@@ -84,10 +84,10 @@
         <sonar.dynamicAnalysis>reuseReports</sonar.dynamicAnalysis>
         <sonar.java.coveragePlugin>jacoco</sonar.java.coveragePlugin>
         <sonar.language>java</sonar.language>
-        <version.java>17</version.java>
+        <version.java>21</version.java>
         <version.spotless-maven-plugin>3.10.3</version.spotless-maven-plugin>
         <version.spotless.google-java-format>1.18.1</version.spotless.google-java-format>
-        <version.tiger>4.4.5</version.tiger>
+        <version.tiger>4.5.0</version.tiger>
     </properties>
 
     <dependencyManagement>
@@ -98,12 +98,6 @@
                 <version>${version.tiger}</version>
                 <type>pom</type>
                 <scope>import</scope>
-            </dependency>
-            <!-- pin idp-client to Java 17 compatible version, BOM uses Java 21 compiled version -->
-            <dependency>
-                <groupId>de.gematik.idp</groupId>
-                <artifactId>idp-client</artifactId>
-                <version>27.0.3</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
@@ -142,6 +136,7 @@
         <dependency>
             <groupId>de.gematik.idp</groupId>
             <artifactId>idp-client</artifactId>
+            <version>30.1.1</version>
             <scope>test</scope>
         </dependency>
         <dependency>
