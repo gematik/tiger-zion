@@ -5,6 +5,8 @@
 # Release 5.0.0
 ## Breaking Changes
 * TGR-2351: Migrate tiger to JDK 21
+* TGRZ-22: update pom for Jandex
+* TGR-2367: Update base image gematik1/osadl-alpine-openjdk21-jre to 1.1.5
 
 # Release 4.4.6
 * TGRZ-7: Backend requests do not parse body correctly
